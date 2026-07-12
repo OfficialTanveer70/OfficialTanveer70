@@ -5,7 +5,7 @@
   <a href="mailto:Inquiry.iConnect.Social@gmail.com"><img src="https://shields.io" /></a>
 </p>
 
-A passionate **Office Assistant by profession** and a **Web Developer by interest**, based in **Karachi, Pakistan** 🇵🇰. I love building innovative solutions for the web, automating workflows, and experimenting with technology.
+A passionate **Assistant by profession** and a **Web Developer by interest**, based in **Karachi, Pakistan** 🇵🇰. I love building innovative solutions for the web, automating workflows, and experimenting with technology.
 
 ---
 
