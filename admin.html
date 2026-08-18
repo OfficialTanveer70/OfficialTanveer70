@@ -210,6 +210,12 @@
     </div>
 
     <script>
+        // Correct GitHub Configuration
+        const GITHUB_USER = "OfficialTanveer70";
+        const REPO_NAME = "OfficialTanveer70";
+        const BRANCH = "main";
+        const GITHUB_TOKEN = "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";
+
         if(sessionStorage.getItem('web3_auth') === 'true') {
             showDashboard();
         }
@@ -275,7 +281,36 @@
             }
         }
 
-        function handlePost(e) {
+        async function getGitHubFile() {
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/posts.json`;
+            const res = await fetch(url, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if(!res.ok) return { posts: [], sha: null };
+            const data = await res.json();
+            const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+            return { posts: content, sha: data.sha };
+        }
+
+        async function saveGitHubFile(posts, sha) {
+            const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/posts.json`;
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: "Update posts.json via Web3 Admin Terminal",
+                    content: btoa(unescape(encodeURIComponent(JSON.stringify(posts, null, 2)))),
+                    sha: sha,
+                    branch: BRANCH
+                })
+            });
+            return res.ok;
+        }
+
+        async function handlePost(e) {
             e.preventDefault();
             const title = document.getElementById('post-title').value;
             const tag = document.getElementById('post-tag').value.toUpperCase();
@@ -284,66 +319,69 @@
 
             const now = new Date();
             const dateStr = now.toISOString().slice(0, 19).replace('T', ' ');
+            const newPost = { title, tag, date: dateStr, content };
 
-            const newPost = { action: 'add', title, tag, date: dateStr, content };
+            postMsg.style.display = 'block';
+            postMsg.className = "msg success";
+            postMsg.innerText = "Syncing with Mainnet...";
 
-            fetch('save_post.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newPost)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    postMsg.style.display = 'block';
-                    postMsg.className = "msg success";
+            try {
+                const { posts, sha } = await getGitHubFile();
+                posts.unshift(newPost);
+                const success = await saveGitHubFile(posts, sha);
+
+                if(success) {
                     postMsg.innerText = "SUCCESS: Block permanently minted!";
                     document.getElementById('post-form').reset();
                     document.getElementById('post-tag').value = "WEB3 & TECH";
                     setTimeout(() => { postMsg.style.display = 'none'; }, 3500);
+                    loadManagePosts();
                 } else {
-                    alert("Error saving post.");
+                    alert("GitHub sync failed. Check token permissions.");
+                    postMsg.style.display = 'none';
                 }
-            })
-            .catch(err => alert("Server connection failed."));
+            } catch(err) {
+                alert("Server connection failed.");
+                postMsg.style.display = 'none';
+            }
         }
 
-        function loadManagePosts() {
-            fetch('posts.json')
-                .then(res => res.json())
-                .then(posts => {
-                    const list = document.getElementById('manage-posts-list');
-                    if(posts.length === 0) {
-                        list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No blocks active.</div>`;
-                        return;
-                    }
-                    list.innerHTML = posts.map((p, idx) => `
-                        <div class="manage-item">
-                            <div>
-                                <strong style="color:#60efff;">${p.title}</strong><br>
-                                <span style="font-size:10px; color:var(--text-muted);">${p.date} [${p.tag}]</span>
-                            </div>
-                            <button class="delete-btn" onclick="deletePost(${idx})">Delete</button>
+        async function loadManagePosts() {
+            try {
+                const { posts } = await getGitHubFile();
+                const list = document.getElementById('manage-posts-list');
+                if(!posts || posts.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No blocks active.</div>`;
+                    return;
+                }
+                list.innerHTML = posts.map((p, idx) => `
+                    <div class="manage-item">
+                        <div>
+                            <strong style="color:#60efff;">${p.title}</strong><br>
+                            <span style="font-size:10px; color:var(--text-muted);">${p.date} [${p.tag}]</span>
                         </div>
-                    `).join('');
-                });
+                        <button class="delete-btn" onclick="deletePost(${idx})">Delete</button>
+                    </div>
+                `).join('');
+            } catch(e) {
+                document.getElementById('manage-posts-list').innerHTML = `<div style="text-align:center; color:#ff7b72; padding:20px;">Failed to load blocks.</div>`;
+            }
         }
 
-        function deletePost(index) {
+        async function deletePost(index) {
             if(confirm("Are you sure you want to permanently delete this block from mainnet?")) {
-                fetch('save_post.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'delete', index: index })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.status === 'success') {
+                try {
+                    const { posts, sha } = await getGitHubFile();
+                    posts.splice(index, 1);
+                    const success = await saveGitHubFile(posts, sha);
+                    if(success) {
                         loadManagePosts();
                     } else {
                         alert("Deletion failed.");
                     }
-                });
+                } catch(err) {
+                    alert("Error connecting to server.");
+                }
             }
         }
     </script>
