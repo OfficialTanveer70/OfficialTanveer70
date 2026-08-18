@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Terminal | Secure Node Management</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><text y=%22.9em%22 font-size=%2290%%22>⚡</text></svg>">
+    <meta name="robots" content="noindex, nofollow">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #010409;
+            --card-bg: rgba(13, 17, 23, 0.92);
+            --accent-glow: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --border-glass: rgba(0, 255, 135, 0.2);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 10%, rgba(0, 255, 135, 0.08) 0%, transparent 50%);
+            margin: 0;
+            padding: 15px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .box {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-glass);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 750px;
+        }
+        h2 { 
+            text-align: center; 
+            margin-top: 0; 
+            font-size: 20px;
+            background: var(--accent-glow); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-family: 'Fira Code', monospace; 
+            word-break: break-all;
+        }
+        
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .tab-btn { background: none; border: none; color: var(--text-muted); font-family: 'Fira Code', monospace; font-size: 12px; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
+        .tab-btn.active { background: rgba(0,255,135,0.15); color: #00ff87; border: 1px solid rgba(0,255,135,0.3); }
+
+        .toolbar-group { margin-bottom: 15px; }
+        .toolbar-label { font-size: 11px; color: #60efff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-family: 'Fira Code', monospace; display: block; }
+        
+        .toolbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.4);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .tool-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+            transition: all 0.2s;
+            flex: 1 1 auto;
+            text-align: center;
+        }
+        .tool-btn:hover { background: #00ff87; color: #010409; border-color: #00ff87; }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 8px 0 15px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+        }
+        textarea {
+            height: 200px;
+            resize: vertical;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #00ff87;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #00ff87; box-shadow: 0 0 12px rgba(0, 255, 135, 0.25); }
+        
+        button.submit-btn {
+            width: 100%;
+            background: var(--accent-glow);
+            color: #010409;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: opacity 0.3s;
+        }
+        button.submit-btn:hover { opacity: 0.9; }
+        
+        .msg { font-size: 13px; text-align: center; margin-bottom: 15px; font-weight: 600; font-family: 'Fira Code', monospace; }
+        .success { color: #00ff87; }
+        .error { color: #ff7b72; }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-family: 'Fira Code', monospace; }
+        .back-link:hover { color: #fff; }
+
+        /* Manage Blocks List */
+        .manage-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        .delete-btn { background: rgba(255, 123, 114, 0.15); color: #ff7b72; border: 1px solid rgba(255, 123, 114, 0.3); padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Fira Code', monospace; font-size: 11px; }
+        .delete-btn:hover { background: #ff7b72; color: #010409; }
+
+        @media (min-width: 768px) {
+            body { padding: 30px; }
+            .box { padding: 40px; }
+            h2 { font-size: 24px; }
+            button.submit-btn { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <!-- Authentication Section -->
+        <div id="login-section">
+            <h2>// SECURE_TERMINAL_LOGIN</h2>
+            <div id="login-msg" class="msg error" style="display:none;"></div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <label class="toolbar-label">Node Operator ID</label>
+                <input type="text" id="user" placeholder="admin" required>
+                
+                <label class="toolbar-label">Master Passkey</label>
+                <input type="password" id="pass" placeholder="Enter secure password..." required>
+                
+                <button type="submit" class="submit-btn">EXECUTE AUTHENTICATION</button>
+            </form>
+        </div>
+
+        <!-- Dashboard Terminal Section -->
+        <div id="dashboard-section" style="display:none;">
+            <h2>// NODE_MANAGEMENT_TERMINAL</h2>
+            
+            <div class="nav-tabs">
+                <button class="tab-btn active" id="tab-mint-btn" onclick="switchTab('mint')">➕ Mint New Block</button>
+                <button class="tab-btn" id="tab-manage-btn" onclick="switchTab('manage')">⚙️ Manage Blocks</button>
+            </div>
+
+            <!-- Mint View -->
+            <div id="view-mint">
+                <div id="post-msg" class="msg success" style="display:none;"></div>
+                <form id="post-form" onsubmit="handlePost(event)">
+                    <label class="toolbar-label">Article Title</label>
+                    <input type="text" id="post-title" placeholder="Enter headline..." required>
+                    
+                    <label class="toolbar-label">Category / Protocol Tag</label>
+                    <input type="text" id="post-tag" placeholder="e.g. WEB3 & TECH, CODING, ANNOUNCEMENT" required value="WEB3 & TECH">
+
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">Formatting & Media Tools</span>
+                        <div class="toolbar">
+                            <button type="button" class="tool-btn" onclick="insertTag('<strong>', '</strong>')"><b>Bold</b></button>
+                            <button type="button" class="tool-btn" onclick="insertTag('<em>', '</em>')"><i>Italic</i></button>
+                            <button type="button" class="tool-btn" onclick="insertTag('<h3>', '</h3>')">H3</button>
+                            <button type="button" class="tool-btn" onclick="insertTag('<p>', '</p>')">P</button>
+                            <button type="button" class="tool-btn" onclick="insertTag('<code>', '</code>')">Code</button>
+                            <button type="button" class="tool-btn" onclick="insertTag('<pre><code>', '</code></pre>')">Block</button>
+                            <button type="button" class="tool-btn" onclick="insertTag('<blockquote>', '</blockquote>')">Quote</button>
+                            <button type="button" class="tool-btn" onclick="insertImageTag()">🖼️ Photo</button>
+                        </div>
+                    </div>
+
+                    <label class="toolbar-label">Payload Editor (HTML & Code)</label>
+                    <textarea id="post-content" placeholder="Write article content or code structure here..." required></textarea>
+                    
+                    <button type="submit" class="submit-btn">MINT BLOCK TO MAINNET</button>
+                </form>
+            </div>
+
+            <!-- Manage View -->
+            <div id="view-manage" style="display:none;">
+                <div class="toolbar-label" style="margin-bottom:12px;">Active Server Blocks Ledger</div>
+                <div id="manage-posts-list">Loading blocks...</div>
+            </div>
+
+            <a href="index2.html" class="back-link">← Return to Main Explorer</a>
+        </div>
+    </div>
+
+    <script>
+        if(sessionStorage.getItem('web3_auth') === 'true') {
+            showDashboard();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('user').value.trim();
+            const p = document.getElementById('pass').value.trim();
+            const msg = document.getElementById('login-msg');
+
+            if(u === 'admin' && p === '11ko12ne13bar14') {
+                sessionStorage.setItem('web3_auth', 'true');
+                showDashboard();
+            } else {
+                msg.style.display = 'block';
+                msg.innerText = "CRITICAL: Invalid Operator ID or Master Passkey!";
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+            loadManagePosts();
+        }
+
+        function switchTab(tab) {
+            if(tab === 'mint') {
+                document.getElementById('view-mint').style.display = 'block';
+                document.getElementById('view-manage').style.display = 'none';
+                document.getElementById('tab-mint-btn').className = 'tab-btn active';
+                document.getElementById('tab-manage-btn').className = 'tab-btn';
+            } else {
+                document.getElementById('view-mint').style.display = 'none';
+                document.getElementById('view-manage').style.display = 'block';
+                document.getElementById('tab-mint-btn').className = 'tab-btn';
+                document.getElementById('tab-manage-btn').className = 'tab-btn active';
+                loadManagePosts();
+            }
+        }
+
+        function insertTag(openTag, closeTag) {
+            const textarea = document.getElementById('post-content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            const selectedText = text.substring(start, end);
+            const replacement = openTag + selectedText + closeTag;
+            
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + openTag.length, end + openTag.length);
+        }
+
+        function insertImageTag() {
+            const imgUrl = prompt("Enter Image URL (e.g. https://example.com/image.jpg):");
+            if(imgUrl) {
+                const imgHtml = `<img src="${imgUrl}" alt="Post Image">`;
+                const textarea = document.getElementById('post-content');
+                const start = textarea.selectionStart;
+                textarea.value = textarea.value.substring(0, start) + imgHtml + textarea.value.substring(textarea.selectionEnd);
+                textarea.focus();
+            }
+        }
+
+        function handlePost(e) {
+            e.preventDefault();
+            const title = document.getElementById('post-title').value;
+            const tag = document.getElementById('post-tag').value.toUpperCase();
+            const content = document.getElementById('post-content').value;
+            const postMsg = document.getElementById('post-msg');
+
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 19).replace('T', ' ');
+
+            const newPost = { action: 'add', title, tag, date: dateStr, content };
+
+            fetch('save_post.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newPost)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    postMsg.style.display = 'block';
+                    postMsg.className = "msg success";
+                    postMsg.innerText = "SUCCESS: Block permanently minted!";
+                    document.getElementById('post-form').reset();
+                    document.getElementById('post-tag').value = "WEB3 & TECH";
+                    setTimeout(() => { postMsg.style.display = 'none'; }, 3500);
+                } else {
+                    alert("Error saving post.");
+                }
+            })
+            .catch(err => alert("Server connection failed."));
+        }
+
+        function loadManagePosts() {
+            fetch('posts.json')
+                .then(res => res.json())
+                .then(posts => {
+                    const list = document.getElementById('manage-posts-list');
+                    if(posts.length === 0) {
+                        list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No blocks active.</div>`;
+                        return;
+                    }
+                    list.innerHTML = posts.map((p, idx) => `
+                        <div class="manage-item">
+                            <div>
+                                <strong style="color:#60efff;">${p.title}</strong><br>
+                                <span style="font-size:10px; color:var(--text-muted);">${p.date} [${p.tag}]</span>
+                            </div>
+                            <button class="delete-btn" onclick="deletePost(${idx})">Delete</button>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function deletePost(index) {
+            if(confirm("Are you sure you want to permanently delete this block from mainnet?")) {
+                fetch('save_post.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', index: index })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        loadManagePosts();
+                    } else {
+                        alert("Deletion failed.");
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

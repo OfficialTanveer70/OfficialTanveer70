@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Web3 Terminal | Decentralized Node Explorer</title>
+    <meta name="google-site-verification" content="UFTEYW5CEv5iIAeCy1-iji7NYVGA07O30YQGyCRSE0g" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><text y=%22.9em%22 font-size=%2290%%22>⚡</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root[data-theme="dark"] {
+            --bg-color: #010409;
+            --card-bg: rgba(13, 17, 23, 0.92);
+            --accent-glow: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --border-glass: rgba(0, 255, 135, 0.2);
+            --input-bg: rgba(0, 0, 0, 0.4);
+            --code-color: #00ff87;
+        }
+        :root[data-theme="light"] {
+            --bg-color: #f0f2f5;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --accent-glow: linear-gradient(135deg, #008751 0%, #00acc1 100%);
+            --text-main: #24292e;
+            --text-muted: #586069;
+            --border-glass: rgba(0, 135, 81, 0.2);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --code-color: #d73a49;
+        }
+
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 10%, rgba(0, 255, 135, 0.05) 0%, transparent 50%);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-glass);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            background: var(--accent-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Fira Code', monospace;
+        }
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .icon-btn, .admin-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .icon-btn:hover, .admin-btn:hover { background: #00ff87; color: #010409; }
+
+        .search-filter-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .search-input, .filter-select {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+        .filter-select { flex: 0 0 160px; font-family: 'Fira Code', monospace; cursor: pointer; }
+
+        .post-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-glass);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .post-tag {
+            background: rgba(0, 255, 135, 0.1);
+            color: #00ff87;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .post-title {
+            font-size: 22px;
+            margin: 0 0 15px 0;
+            color: var(--text-main);
+        }
+        .post-body {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+        .post-body img { max-width: 100%; height: auto; border-radius: 10px; margin: 15px 0; border: 1px solid var(--border-glass); }
+        .post-body pre { background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid rgba(255,255,255,0.1); }
+        .post-body code { color: var(--code-color); font-family: 'Fira Code', monospace; }
+        .post-body blockquote { border-left: 3px solid #00ff87; margin: 15px 0; padding-left: 15px; color: var(--text-muted); font-style: italic; }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 15px;
+        }
+        .comments-title { font-size: 12px; font-family: 'Fira Code', monospace; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; }
+        .comment-item { background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border: 1px solid rgba(255,255,255,0.03); }
+        .comment-author { font-weight: 700; color: #60efff; font-family: 'Fira Code', monospace; font-size: 11px; }
+        .comment-input-box { display: flex; gap: 8px; margin-top: 12px; }
+        .comment-input { flex: 1; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--border-glass); border-radius: 6px; color: var(--text-main); font-size: 12px; outline: none; }
+        .comment-btn { background: #00ff87; color: #010409; border: none; padding: 0 14px; border-radius: 6px; font-family: 'Fira Code', monospace; font-weight: 700; cursor: pointer; font-size: 11px; }
+
+        .loading, .no-posts { text-align: center; font-family: 'Fira Code', monospace; color: var(--text-muted); padding: 40px; }
+
+        /* Footer Style */
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 30px;
+            border-top: 1px solid var(--border-glass);
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        footer a {
+            color: #00ff87;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            header { padding: 15px; flex-direction: column; gap: 12px; align-items: stretch; text-align: center; }
+            .header-controls { justify-content: center; }
+            .search-filter-box { flex-direction: column; }
+            .filter-select { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>⚡ WEB3_NODE_EXPLORER</h1>
+            <div class="header-controls">
+                <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">☀️ Light</button>
+                <a href="admin.html" class="admin-btn">🔒 Admin Terminal</a>
+            </div>
+        </header>
+
+        <div class="search-filter-box">
+            <input type="text" id="search-input" class="search-input" placeholder="Search blocks by title or content..." oninput="filterPosts()">
+            <select id="category-filter" class="filter-select" onchange="filterPosts()">
+                <option value="ALL">ALL CATEGORIES</option>
+            </select>
+        </div>
+
+        <div id="posts-feed">
+            <div class="loading">Loading network blocks from server...</div>
+        </div>
+
+        <footer>
+            Developed & Designed by <a href="https://instagram.com/official.tanveer.70" target="_blank">Tanveer Hussain</a>
+        </footer>
+    </div>
+
+    <script>
+        let allPosts = [];
+        let serverComments = {};
+
+        // Theme Switcher Logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('theme-toggle');
+            if(html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                btn.innerText = "🌙 Dark";
+                localStorage.setItem('web3_theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                btn.innerText = "☀️ Light";
+                localStorage.setItem('web3_theme', 'dark');
+            }
+        }
+
+        if(localStorage.getItem('web3_theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.getElementById('theme-toggle').innerText = "🌙 Dark";
+        }
+
+        // Fetch Posts and Comments from Server simultaneously
+        Promise.all([
+            fetch('posts.json').then(res => res.json()),
+            fetch('comments.json').then(res => res.json()).catch(() => ({}))
+        ])
+        .then(([postsData, commentsData]) => {
+            allPosts = postsData.reverse(); // Latest first
+            serverComments = commentsData || {};
+            populateCategories();
+            renderPosts(allPosts);
+        })
+        .catch(err => {
+            document.getElementById('posts-feed').innerHTML = `<div class="no-posts">Error synchronizing node data.</div>`;
+        });
+
+        function populateCategories() {
+            const select = document.getElementById('category-filter');
+            const categories = [...new Set(allPosts.map(p => p.tag || 'GENERAL'))];
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderPosts(posts) {
+            const feed = document.getElementById('posts-feed');
+            if(posts.length === 0) {
+                feed.innerHTML = `<div class="no-posts">// NO BLOCKS FOUND ON MAINNET</div>`;
+                return;
+            }
+
+            feed.innerHTML = posts.map((post, index) => {
+                // View Counter Init (LocalStorage is fine for views)
+                const viewsKey = `view_count_${post.date}_${index}`;
+                let views = localStorage.getItem(viewsKey);
+                if(!views) {
+                    views = Math.floor(Math.random() * 40) + 12;
+                    localStorage.setItem(viewsKey, views);
+                }
+
+                // Get comments for this specific post from server data
+                const comments = serverComments[index] || [];
+
+                return `
+                    <div class="post-card">
+                        <div class="post-meta">
+                            <span>BLOCK HASH: ${post.date}</span>
+                            <span class="post-tag">${post.tag || 'GENERAL'}</span>
+                            <span>👁️ ${views} Views</span>
+                        </div>
+                        <h2 class="post-title">${post.title}</h2>
+                        <div class="post-body">${post.content}</div>
+
+                        <div class="comments-section">
+                            <div class="comments-title">Node Feed Remarks (${comments.length})</div>
+                            <div id="comments-list-${index}">
+                                ${comments.map(c => `
+                                    <div class="comment-item">
+                                        <div class="comment-author">${c.author}</div>
+                                        <div>${c.text}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="comment-input-box">
+                                <input type="text" id="comment-author-${index}" class="comment-input" placeholder="Your Name" style="flex:0.4;">
+                                <input type="text" id="comment-text-${index}" class="comment-input" placeholder="Write a remark...">
+                                <button class="comment-btn" onclick="addComment(${index})">SEND</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterPosts() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const selectedCategory = document.getElementById('category-filter').value;
+
+            const filtered = allPosts.filter(post => {
+                const matchesSearch = post.title.toLowerCase().includes(query) || post.content.toLowerCase().includes(query);
+                const matchesCategory = selectedCategory === 'ALL' || (post.tag || 'GENERAL') === selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            renderPosts(filtered);
+        }
+
+        function addComment(index) {
+            const authorInput = document.getElementById(`comment-author-${index}`);
+            const textInput = document.getElementById(`comment-text-${index}`);
+            
+            const author = authorInput.value.trim() || "Anonymous Node";
+            const text = textInput.value.trim();
+
+            if(!text) return;
+
+            // Send data to PHP script to save in server file
+            fetch('save-comment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    postIndex: index,
+                    author: author,
+                    text: text
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    serverComments[index] = data.comments;
+                    authorInput.value = "";
+                    textInput.value = "";
+                    renderPosts(allPosts);
+                } else {
+                    alert("Error saving comment: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Failed to connect to server.");
+            });
+        }
+    </script>
+</body>
+</html>
